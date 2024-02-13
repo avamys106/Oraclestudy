@@ -16,11 +16,20 @@ create table chat_talking (
     chatDate date
 );
 drop table chat_talking;
+
+drop sequence serial_num;
+
+select * from user_sequences;
+
 select * from chat_talking;
+
 select to_char(chatdate, 'YYYY-MM-DD HH:MM:DD') from chat_talking;
+
 insert into chat_talking(idx, nickName, chatLog, chatDate)
-values(serial_num.NEXTVAL, 'avamys12', 'æ»≥Á«œººø‰', 
+values(serial_num.NEXTVAL, 'avamys14', 'æ»≥Á«œººø‰',
 to_char(to_date(sysdate,'YY-MM-DD'),'YY-MM-DD'));
+
+
 select to_char(sysdate, 'YYYY-MM-DD HH:MM:DD') from dual;
 
 
