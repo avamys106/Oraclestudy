@@ -11,8 +11,8 @@ select * from user_sequences;
 
 create table chat_talking (
     idx number primary key,
-    nickName varchar2(20) unique not null,
-    chatLog varchar2(200),
+    nickName varchar2(50) not null,
+    chatLog varchar2(2000),
     chatDate date
 );
 drop table chat_talking;
@@ -22,6 +22,10 @@ drop sequence serial_num;
 select * from user_sequences;
 
 select * from chat_talking;
+
+show recyclebin;
+
+purge recyclebin;
 
 select to_char(chatdate, 'YYYY-MM-DD HH:MM:DD') from chat_talking;
 
