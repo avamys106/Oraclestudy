@@ -220,6 +220,141 @@ print member_auth;
 select * from member;
 
 
+/***********************************************
+JSP 웹 프로그래밍 - JDBC 실습
+***********************************************/
+--새로운 사용자 계정 생성을 위해 system 계정 연결
 
+--세션 변경
+alter session set "_ORACLE_SCRIPT"=true;
 
+--계정 생성
+create user musthave identified by 1234;
 
+--권한 부여
+GRANT CONNECT, RESOURCE, unlimited tablespace TO musthave;
+
+/*
+CMD환경에서 sqlplus를 통해 접속한 경우에는 다른 계정으로 전환시 아래와 같이
+conn (혹은 connect) 명령어를 사용할 수 있다. 하지만 SQL디벨로퍼에서는
+사용할 수 없는 대신 우측 상단의 셀렉트박스를 통해 계정을 변경할 수 있다.
+*/
+conn musthave/1234;
+show user;
+
+--테이블 목록 조회
+select * from tab;
+
+--테이블 및 시퀀스 생성을 위해 musthave 계정 연결
+--기존에 생성된 테이블이 있다면 삭제 후 다시 만들 수 있다.
+drop table member;
+drop table board;
+drop sequence seq_board_num;
+
+--회원 테이블 생성
+create table member (
+    id varchar2(10) not null,
+    pass varchar2(10) not null,
+    name varchar2(30) not null,
+    regidate date default sysdate not null,
+    primary key (id)
+);
+
+--모델1 방식의 게시판 테이블 생성
+create table board(
+    num number primary key,
+    title varchar2(200) not null,
+    content varchar2(2000) not null,
+    id varchar2(10) not null, /* 회원제 게시판이므로 회원아이디 필요 */
+    postdate date default sysdate not null, /* 게시물의 작성일 */
+    visitcount number(6) /* 게시물의 조회수 */
+);
+
+--외래키 설정
+/*
+자식테이블인 board가 부모테이블인 member를 참조하는 외래키를 설정한다.
+board의 id컬럼이 member의 기본키인 id컬럼을 참조한다. 
+*/
+alter table board
+    add constraint board_mem_fk foreign key (id)
+    references member (id);
+
+--시퀀스 생성
+--board테이블에 중복되지 않는 일련번호 부여를 위해 사용
+create sequence seq_board_num
+    increment by 1
+    start with 1
+    minvalue 1
+    nomaxvalue 
+    nocycle
+    nocache;
+
+--더미 데이터 입력
+insert into member (id, pass, name) values ('musthave', '1234', '머스트해브');
+
+insert into board (num, title, content, id, postdate, visitcount)
+    values (seq_board_num.nextval, '제목1입니다', '내용1입니다', 'musthave', sysdate, 0);
+--부모테이블에 없는 아이디 이므로 제약조건 위배로 입력되지 않는다.    
+insert into board (num, title, content, id, postdate, visitcount)
+    values (seq_board_num.nextval, '제목2입니다', '내용2입니다', 'tjoeun', sysdate, 0);    
+--커밋
+commit;
+
+/************************
+모델1 방식의 회원제 게시판 제작하기
+************************/
+--더미데이터 추가 입력 
+insert into board values (seq_board_num.nextval, '지금은 봄입니다',
+    '봄의왈츠', 'musthave', sysdate, 0);
+insert into board values (seq_board_num.nextval, '지금은 여름입니다',
+    '여름향기', 'musthave', sysdate, 0);
+insert into board values (seq_board_num.nextval, '지금은 가을입니다',
+    '가을동화', 'musthave', sysdate, 0);
+insert into board values (seq_board_num.nextval, '지금은 겨울입니다',
+    '겨울연가', 'musthave', sysdate, 0);
+commit;
+--DAO의 selectcount() 메서드 : board테이블의 게시물 갯수 카운트
+select count(*) from board;
+select count(*) from board where title like '%겨울%';
+select count(*) from board where content like '%겨울%';
+delete from board where title like '%test%';
+
+--selectList() 메서드 : 게시판 목록에 출력할 레코드를 정렬해서 인출
+select * from board order by num desc;
+select * from board where title like '%여름%' order by num desc;
+select * from board where title like '%여름%' order by num desc;
+
+--insertWrite() 메서드 : 글쓰기를 위해 insert쿼리를 실행
+insert into board (num, title, content, id, visitcount)
+values (seq_board_num.nextval, '제목Test', '내용Test', 'musthave', 0);
+commit;
+
+--selectView() : 게시물의 일련번호를 통해 내용보기 구현
+select * from board where num=7;
+--별칭을 부여하지 않아 테이블명을 그대로 사용한다.
+select * from board inner join member
+    on board.id=member.id
+where num=7;
+--별칭을 부여해서 필요한 컬럼만 select 절에 기술한다.
+select B.*, M.name from board B inner join member M
+    on B.id=M.id
+where num=7;
+
+--updateVisitCount() : 게시물 내용보기 시 조회수 1 증가
+update board set visitcount = visitcount+1 where num=7;
+commit;
+
+--내용보기시 다른 사람이 작성한 게시물을 확인하기 위해 더미데이터 추가
+insert into member (id, pass, name) values ('tjoeun', '1234', '더조은');
+insert into member (id, pass, name) values ('avamys', '1234', '박성현');
+commit;
+
+--updateEdit() : 기존의 게시물을 수정
+select * from board where num=7;
+update board set title='수정Test', content='내용수정Test'
+    where num=7;
+
+--deletePost() : 게시물 삭제
+delete from board where num=7;
+select * from board;
+commit;
