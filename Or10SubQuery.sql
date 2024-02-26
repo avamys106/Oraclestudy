@@ -168,7 +168,7 @@ from절에는 테이블이 들어와야 하지만, 아래의 서브쿼리에서는 사원테이블의
 가져오게 되므로 테이블을 대체할 수 있게 된다.
 */
 select first_name, rownum from
-    (select * from employees order by first_name desc);
+    (select * from employees order by first_name);
 
 /*
 이름을 기준으로 오름차순 정렬된 레코드에 rownum을 부여하였으므로
@@ -179,6 +179,12 @@ select * from
   (select tb.*, rownum rNum from
     (select * from employees order by first_name) tb )
 /* where rNUm>=1 and rNum<=10; */
-/*where rNUm>=11 and rNum<=20; */
+/* where rNUm>=11 and rNum<=20; */
 where rNUm between 21 and 30;
 --JSP 수업에서 게시판 Paging시 다시 돌아온다.--
+
+
+
+
+
+

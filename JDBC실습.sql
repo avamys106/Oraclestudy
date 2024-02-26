@@ -358,3 +358,42 @@ update board set title='수정Test', content='내용수정Test'
 delete from board where num=7;
 select * from board;
 commit;
+
+--게시판의 Paging기능 추가를 위한 서브쿼리문 작성
+--1.게시물을 작성한 순서(일련번호)의 내림차순으로 정렬 
+select * from board order by num desc;
+--2.내림차순으로 정렬된 상태에서 rownum을 부여
+select tb.*, rownum rNum from 
+    (select * from board order by num desc) tb ;
+--3.목록으로 출력할 게시물의 구간을 정해서 인출. 한페이지당 10개씩.
+select * from (
+select tb.*, rownum rNum from 
+    (select * from board order by num desc) tb
+)
+where rNum>= 11 and rNum<=20;
+
+--게시판의 검색기능의 구현을 위해 like를 사용
+select * from board where title like '%8%' order by num desc;
+
+--페이징 쿼리문 + 검색 기능 쿼리문
+--검색기능은 가장 안쪽에 있는 서브쿼리에 추가하면 된다.
+select * from (
+select tb.*, rownum rNum from 
+    (select * from board 
+        where title like '%8%'
+        order by num desc) tb
+)
+where rNum between 1 and 10;
+--게시물의 구간은 비교연산자 혹은 between으로 작성할 수 있다.
+
+
+
+
+
+
+
+
+
+
+
+
